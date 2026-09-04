@@ -4,7 +4,6 @@
 # Auto Installer for Telegram Server Bot
 # ==========================================
 
-# رنگ‌ها برای نمایش بهتر در ترمینال
 GREEN="\e[32m"
 RED="\e[31m"
 YELLOW="\e[33m"
@@ -15,7 +14,6 @@ echo -e "${GREEN}   Telegram Bot Auto Installer        ${RESET}"
 echo -e "${GREEN}======================================${RESET}"
 echo ""
 
-# 1. گرفتن اطلاعات از کاربر
 read -p "Enter Telegram Bot Token (API): " BOT_TOKEN
 read -p "Enter Admin Chat ID: " ADMIN_ID
 read -p "Enter Proxy Port (e.g. 45248): " PROXY_PORT
@@ -25,12 +23,10 @@ read -p "Enter Proxy Password: " PROXY_PASS
 echo -e "\n${YELLOW}[1/4] Installing Required Packages...${RESET}"
 apt-get update -y
 apt-get install -y python3 python3-pip curl ipset iptables
-# نصب کتابخانه تلگرام (با هندل کردن سیستم‌عامل‌های جدید که به فلگ زیر نیاز دارند)
 pip3 install pyTelegramBotAPI --break-system-packages 2>/dev/null || pip3 install pyTelegramBotAPI
 
 echo -e "${YELLOW}[2/4] Generating Python Script (/root/remote_bot.py)...${RESET}"
 
-# 2. ساخت فایل پایتون (از 'EOF' استفاده شده تا متغیرهای داخلی اسکریپت‌های بش به هم نریزند)
 cat << 'EOF' > /root/remote_bot.py
 #!/root/remote_bot.py
 import telebot
@@ -44,7 +40,6 @@ import threading
 
 # PROXY_PLACEHOLDER
 
-# Bot Token and Admin ID
 TOKEN = 'REPLACE_TOKEN'
 ADMIN_ID = REPLACE_ADMIN_ID
 bot = telebot.TeleBot(TOKEN)
@@ -52,16 +47,13 @@ bot = telebot.TeleBot(TOKEN)
 def is_admin(message):
     return message.chat.id == REPLACE_ADMIN_ID
 
-# --- Main Menu (Reply Keyboards - Bottom Persistent Buttons) ---
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     if not is_admin(message): return
-
     try:
         bot.delete_message(message.chat.id, message.message_id)
     except:
         pass
-
     markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     btn1 = KeyboardButton("1️⃣ Users Report")
     btn2 = KeyboardButton("➕ Add IP")
@@ -86,16 +78,11 @@ def send_welcome(message):
     panel_text = "🎛 <b>SERVER USAGE PANEL - IRAN</b> 🇮🇷\n━━━━━━━━━━━━━━━━━━━━\n🤖 <i>Please select an option below:</i>"
     bot.send_message(message.chat.id, panel_text, parse_mode="HTML", reply_markup=markup)
 
-# --- Handle Reply Keyboard Button Clicks ---
 @bot.message_handler(func=lambda message: True)
 def handle_reply_buttons(message):
     if not is_admin(message): return
-
-    try:
-        bot.delete_message(message.chat.id, message.message_id)
-    except:
-        pass
-
+    try: bot.delete_message(message.chat.id, message.message_id)
+    except: pass
     text = message.text
 
     if "Users Report" in text:
@@ -142,10 +129,8 @@ fi
         with open("/root/tg_report_temp.sh", "w") as f:
             f.write(bash_script)
         result = subprocess.getoutput("bash /root/tg_report_temp.sh")
-        try:
-            bot.edit_message_text(result, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, result, parse_mode="HTML")
+        try: bot.edit_message_text(result, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, result, parse_mode="HTML")
 
     elif "Add IP" in text:
         msg = bot.send_message(message.chat.id, "➕ Please send the IP address you want to ADD:")
@@ -165,15 +150,9 @@ fi
         disk_info = subprocess.getoutput("df -h / | awk 'NR==2{printf \"Total: %s | Used: %s (%s)\", $2, $3, $5}'")
         cpu_load = subprocess.getoutput("uptime | awk -F'load average:' '{ print $2 }' | xargs")
 
-        status_text = f"📊 <b>Server Resource Status</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-        status_text += f"🧠 <b>RAM Usage:</b>\n   └ <code>{ram_info}</code>\n\n"
-        status_text += f"💾 <b>Disk Usage (/):</b>\n   └ <code>{disk_info}</code>\n\n"
-        status_text += f"⚡️ <b>CPU Load Average:</b>\n   └ <code>{cpu_load}</code>"
-
-        try:
-            bot.edit_message_text(status_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, status_text, parse_mode="HTML")
+        status_text = f"📊 <b>Server Resource Status</b>\n━━━━━━━━━━━━━━━━━━━━\n🧠 <b>RAM Usage:</b>\n   └ <code>{ram_info}</code>\n\n💾 <b>Disk Usage (/):</b>\n   └ <code>{disk_info}</code>\n\n⚡️ <b>CPU Load Average:</b>\n   └ <code>{cpu_load}</code>"
+        try: bot.edit_message_text(status_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, status_text, parse_mode="HTML")
 
     elif "Active Ports" in text:
         loading_msg = bot.send_message(message.chat.id, "Scanning active ports... ⏳")
@@ -192,27 +171,19 @@ fi
                     port_part = local_addr
                 res_text += f"▪️ <b>{proto} Port:</b> <code>{port_part}</code> (Bind: {ip_part})\n"
                 ports_count += 1
-                if ports_count >= 20: 
-                    break
-
-        if ports_count == 0:
-            res_text += "⚠️ <i>No active ports found.</i>"
-        try:
-            bot.edit_message_text(res_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, res_text, parse_mode="HTML")
+                if ports_count >= 20: break
+        if ports_count == 0: res_text += "⚠️ <i>No active ports found.</i>"
+        try: bot.edit_message_text(res_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, res_text, parse_mode="HTML")
 
     elif "Clear Cache" in text:
         loading_msg = bot.send_message(message.chat.id, "🧹 Clearing server cache and temp files... ⏳")
         subprocess.getoutput("apt-get clean")
         subprocess.getoutput("journalctl --vacuum-time=3d")
         subprocess.getoutput("sync; echo 1 > /proc/sys/vm/drop_caches")
-        res_text = "✅ <b>System Cache Cleared!</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-        res_text += "▪️ APT cache cleared.\n▪️ Old journal logs removed.\n▪️ RAM PageCache dropped."
-        try:
-            bot.edit_message_text(res_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, res_text, parse_mode="HTML")
+        res_text = "✅ <b>System Cache Cleared!</b>\n━━━━━━━━━━━━━━━━━━━━\n▪️ APT cache cleared.\n▪️ Old journal logs removed.\n▪️ RAM PageCache dropped."
+        try: bot.edit_message_text(res_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, res_text, parse_mode="HTML")
 
     elif "Packets" in text:
         loading_msg = bot.send_message(message.chat.id, "Fetching Packets status... ⏳")
@@ -233,16 +204,13 @@ fi
                 elif prot == "6": prot_name = "TCP"
                 elif prot == "17": prot_name = "UDP"
                 else: prot_name = prot.upper()
-                final_text += f"🔹 <b>Rule #{num}</b> [<code>{target}</code>]\n"
-                final_text += f"   ├ ⚡️ Proto: {prot_name} | 📦 {pkts} Pkts | 💾 {_bytes}\n"
+                final_text += f"🔹 <b>Rule #{num}</b> [<code>{target}</code>]\n   ├ ⚡️ Proto: {prot_name} | 📦 {pkts} Pkts | 💾 {_bytes}\n"
                 if extra: final_text += f"   └ 🎯 <code>{extra}</code>\n"
                 elif dest != "0.0.0.0/0": final_text += f"   └ 🌐 Dest: <code>{dest}</code>\n"
                 else: final_text += f"   └ 🌐 Any -> Any\n"
                 final_text += "\n"
-        try:
-            bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, final_text, parse_mode="HTML")
+        try: bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, final_text, parse_mode="HTML")
 
     elif "IP Reader" in text:
         loading_msg = bot.send_message(message.chat.id, "Reading IP Reader logs... ⏳")
@@ -256,12 +224,9 @@ fi
                 ip = line.split("Processed IP:")[-1].strip()
                 date_time = " ".join(line.split()[:3])
                 final_text += f"⏱ <code>{date_time}</code> 🟢 <code>{ip}</code>\n"
-        if not has_logs:
-            final_text += "⚠️ <i>No recent processed IPs found.</i>"
-        try:
-            bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, final_text, parse_mode="HTML")
+        if not has_logs: final_text += "⚠️ <i>No recent processed IPs found.</i>"
+        try: bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, final_text, parse_mode="HTML")
 
     elif "Blacklist" in text:
         loading_msg = bot.send_message(message.chat.id, "Reading blacklist... ⏳")
@@ -295,13 +260,10 @@ else
     done
 fi
 """
-        with open("/root/tg_bl_temp.sh", "w") as f:
-            f.write(bash_script)
+        with open("/root/tg_bl_temp.sh", "w") as f: f.write(bash_script)
         result = subprocess.getoutput("bash /root/tg_bl_temp.sh")
-        try:
-            bot.edit_message_text(result, message.chat.id, loading_msg.message_id, parse_mode="HTML")
-        except:
-            bot.send_message(message.chat.id, result, parse_mode="HTML")
+        try: bot.edit_message_text(result, message.chat.id, loading_msg.message_id, parse_mode="HTML")
+        except: bot.send_message(message.chat.id, result, parse_mode="HTML")
 
     elif "Bandwidth" in text:
         loading_msg = bot.send_message(message.chat.id, "Fetching bandwidth usage... ⏳")
@@ -315,16 +277,11 @@ fi
             elif line.startswith("today"):
                 parts = line.split()
                 if len(parts) >= 4: t_dl, t_ul, t_tot = parts[1], parts[2], parts[3]
-            elif "Download (RX):" in line:
-                m_rx = line.split("Download (RX):")[-1].strip()
-            elif "Upload (TX):" in line:
-                m_tx = line.split("Upload (TX):")[-1].strip()
-            elif "Traffic Remaining:" in line:
-                m_left = line.split("Traffic Remaining:")[-1].strip()
-            elif line.startswith("(Base Left:"):
-                m_extra = line.strip()
-            elif "Days Remaining:" in line:
-                m_days = line.split("Days Remaining:")[-1].strip()
+            elif "Download (RX):" in line: m_rx = line.split("Download (RX):")[-1].strip()
+            elif "Upload (TX):" in line: m_tx = line.split("Upload (TX):")[-1].strip()
+            elif "Traffic Remaining:" in line: m_left = line.split("Traffic Remaining:")[-1].strip()
+            elif line.startswith("(Base Left:"): m_extra = line.strip()
+            elif "Days Remaining:" in line: m_days = line.split("Days Remaining:")[-1].strip()
 
         final_text = "📊 <b>Server Traffic Usage Report</b>\n━━━━━━━━━━━━━━━━━━━━\n"
         final_text += f"📅 <b>Yesterday:</b>\n   ├ 📥 Download: <code>{y_dl}</code>\n   ├ 📤 Upload: <code>{y_ul}</code>\n   └ 🔄 Total: <code>{y_tot}</code>\n\n"
@@ -344,10 +301,8 @@ fi
             InlineKeyboardButton("7️⃣ Carry-Over", callback_data="bw_7"),
             InlineKeyboardButton("8️⃣ Calc Upload", callback_data="bw_8")
         )
-        try:
-            bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML", reply_markup=ikm)
-        except:
-            bot.send_message(message.chat.id, final_text, parse_mode="HTML", reply_markup=ikm)
+        try: bot.edit_message_text(final_text, message.chat.id, loading_msg.message_id, parse_mode="HTML", reply_markup=ikm)
+        except: bot.send_message(message.chat.id, final_text, parse_mode="HTML", reply_markup=ikm)
 
     elif "Geo IP Lookup" in text:
         msg = bot.send_message(message.chat.id, "🌐 Please send the IP address you want to check:")
@@ -459,17 +414,14 @@ EOF
 
 echo -e "${YELLOW}[3/4] Injecting Variables into Script...${RESET}"
 
-# جایگزینی متغیرها
 sed -i "s/REPLACE_TOKEN/$BOT_TOKEN/g" /root/remote_bot.py
 sed -i "s/REPLACE_ADMIN_ID/$ADMIN_ID/g" /root/remote_bot.py
 
-# تنظیم پراکسی
 PROXY_STRING="apihelper.proxy = {'https': 'socks5h://${PROXY_USER}:${PROXY_PASS}@127.0.0.1:${PROXY_PORT}'}"
 sed -i "s|# PROXY_PLACEHOLDER|$PROXY_STRING|g" /root/remote_bot.py
 
 echo -e "${YELLOW}[4/4] Creating and Starting Systemd Service...${RESET}"
 
-# 3. ساختن سرویس برای ران ماندن دائمی بات
 cat << EOF > /etc/systemd/system/remote_bot.service
 [Unit]
 Description=Telegram Remote Server Bot
@@ -486,7 +438,6 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# ری‌استارت و فعال‌سازی سرویس
 systemctl daemon-reload
 systemctl enable remote_bot.service
 systemctl restart remote_bot.service
