@@ -1,5 +1,8 @@
 # Remote Server Control
 
+
+<p align="center"><a href="https://hits.sh/github.com/Plus98ir/Remote-Server-Control/"><img src="https://hits.sh/github.com/Plus98ir/Remote-Server-Control.svg?style=for-the-badge&label=views&color=2563eb" alt="Views"></a> <a href="https://corenetbase.com/#support"><img src="https://img.shields.io/badge/support-buy%20me%20a%20coffee-e11d2a?style=for-the-badge&logo=buymeacoffee&logoColor=white" alt="Support"></a></p>
+
 A lightweight Telegram bot to **monitor and manage a Linux server** from your phone: live resources, systemd services, open ports, ping / Geo IP tools and automatic alerts. If [DNSGuard](#dnsguard-read-only) runs on the same server, the bot also shows its users, queries and relay traffic, **read-only**.
 
 - **Zero dependencies**: Python standard library only, no `pip`. That's useful on servers where PyPI is slow or blocked.
